@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:client/core/theme/color_pallete.dart';
 import 'package:client/core/utils.dart';
-import 'package:client/core/widgets/custom_text_form_field.dart';
-import 'package:client/features/home/view/widgets/audio_wave.dart';
+import 'package:client/features/home/view/widgets/upload/upload_details_form.dart';
+import 'package:client/features/home/view/widgets/upload/upload_thumbnail_area.dart';
+import 'package:client/features/home/view/widgets/upload/upload_track_area.dart';
 import 'package:client/features/home/viewmodel/home_viewmodel.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:flex_color_picker/flex_color_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -51,216 +51,6 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    ref.listen(homeModelViewProvider, (_, next) {
-      next?.when(
-        data: (data) {
-          setState(() => _isUploading = false);
-          showSnackBar(context, 'Song uploaded successfully!');
-          ref.invalidate(getAllSongsProvider);
-          Navigator.pop(context);
-        },
-        error: (error, stackTrace) {
-          setState(() => _isUploading = false);
-          showSnackBar(context, error.toString());
-        },
-        loading: () {},
-      );
-    });
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Upload Song"),
-        actions: [
-          _isUploading
-              ? const Padding(
-                  padding: EdgeInsets.only(right: 16.0),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
-              : IconButton(
-                  onPressed: _handleUpload,
-                  icon: const Icon(Icons.upload),
-                ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              spacing: 20,
-              children: [
-                // ── Thumbnail Picker ──
-                GestureDetector(
-                  onTap: selectImage,
-                  child: _selectedImage != null
-                      ? Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.file(
-                                _selectedImage!,
-                                height: 150,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              top: 8,
-                              right: 8,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: Colors.black54,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  color: Colors.white,
-                                  size: 20,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : DottedBorder(
-                          options: RoundedRectDottedBorderOptions(
-                            dashPattern: const [10, 5],
-                            strokeWidth: 2,
-                            color: ColorPallete.borderColor,
-                            strokeCap: StrokeCap.round,
-                            radius: Radius.circular(10),
-                          ),
-                          child: SizedBox(
-                            height: 150,
-                            width: double.infinity,
-                            child: Column(
-                              spacing: 16,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.image_outlined,
-                                  size: 40,
-                                  color: ColorPallete.greyColor,
-                                ),
-                                Text(
-                                  'Select thumbnail for Song',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: ColorPallete.greyColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                ),
-
-                const SizedBox(height: 10),
-
-                // ── Audio Picker ──
-                if (_selectedAudio != null) ...[
-                  AudioWave(wavePath: _selectedAudio!.path),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _selectedAudio!.path
-                              .split(Platform.pathSeparator)
-                              .last,
-                          style: const TextStyle(
-                            color: ColorPallete.subtitleText,
-                            fontSize: 13,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      TextButton.icon(
-                        onPressed: selectSong,
-                        icon: const Icon(Icons.swap_horiz, size: 18),
-                        label: const Text('Change'),
-                      ),
-                    ],
-                  ),
-                ] else
-                  GestureDetector(
-                    onTap: selectSong,
-                    child: DottedBorder(
-                      options: RoundedRectDottedBorderOptions(
-                        dashPattern: const [10, 5],
-                        strokeWidth: 2,
-                        color: ColorPallete.borderColor,
-                        strokeCap: StrokeCap.round,
-                        radius: Radius.circular(10),
-                      ),
-                      child: SizedBox(
-                        height: 70,
-                        width: double.infinity,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          spacing: 12,
-                          children: [
-                            Icon(
-                              Icons.music_note_outlined,
-                              size: 30,
-                              color: ColorPallete.greyColor,
-                            ),
-                            Text(
-                              'Pick Song',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: ColorPallete.greyColor,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // ── Song Name ──
-                CustomTextFormField(
-                  hint: 'Song Name',
-                  controller: _songNameController,
-                ),
-
-                // ── Artist Name ──
-                CustomTextFormField(
-                  hint: 'Artist Name',
-                  controller: _artistNameController,
-                ),
-
-                // ── Color Picker ──
-                ColorPicker(
-                  heading: const Text('Select Color'),
-                  color: selectedColor,
-                  pickersEnabled: const {
-                    ColorPickerType.primary: true,
-                    ColorPickerType.accent: true,
-                    ColorPickerType.wheel: true,
-                  },
-                  onColorChanged: (Color color) {
-                    setState(() {
-                      selectedColor = color;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _handleUpload() async {
     if (_selectedImage == null) {
       showSnackBar(context, 'Please select a thumbnail image');
@@ -285,5 +75,121 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
           artistName: _artistNameController.text.trim(),
           color: colorToHexCode(selectedColor),
         );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen(homeModelViewProvider, (_, next) {
+      next?.when(
+        data: (data) {
+          setState(() => _isUploading = false);
+          showSnackBar(context, 'Song uploaded successfully!');
+          ref.invalidate(getAllSongsProvider);
+          Navigator.pop(context);
+        },
+        error: (error, stackTrace) {
+          setState(() => _isUploading = false);
+          showSnackBar(context, error.toString());
+        },
+        loading: () {},
+      );
+    });
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          "Upload Song",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            onPressed: () {
+              _formKey.currentState?.reset();
+              setState(() {
+                _selectedAudio = null;
+                _selectedImage = null;
+                selectedColor = ColorPallete.cardColor;
+              });
+            },
+            icon: const Icon(CupertinoIcons.refresh),
+            tooltip: 'Reset Form',
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Thumbnail Picker ──
+              UploadThumbnailArea(
+                selectedImage: _selectedImage,
+                onSelectImage: selectImage,
+              ),
+
+              const SizedBox(height: 20),
+
+              // ── Audio Picker ──
+              UploadTrackArea(
+                selectedAudio: _selectedAudio,
+                onSelectAudio: selectSong,
+              ),
+
+              const SizedBox(height: 24),
+
+              // ── Input Fields & Color Picker ──
+              UploadDetailsForm(
+                songNameController: _songNameController,
+                artistNameController: _artistNameController,
+                selectedColor: selectedColor,
+                onColorChanged: (color) =>
+                    setState(() => selectedColor = color),
+              ),
+
+              const SizedBox(height: 32),
+
+              // ── Upload Button ──
+              Center(
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isUploading ? null : _handleUpload,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: ColorPallete.gradient2,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 5,
+                    ),
+                    child: _isUploading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Upload Song',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

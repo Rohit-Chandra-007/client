@@ -2,7 +2,6 @@ import 'package:client/core/theme/color_pallete.dart';
 import 'package:client/features/home/model/song_model.dart';
 import 'package:flutter/cupertino.dart';
 
-/// Clean album art — simple rounded image, no glow, no extra decoration.
 class PlayerAlbumArt extends StatelessWidget {
   final SongModel song;
 
